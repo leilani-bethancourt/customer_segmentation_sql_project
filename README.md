@@ -1,18 +1,18 @@
-# Customer Segmentation SQL Project
+# Project Overview
 
 A project to learn how to use SQL with datasets pertaining to customer segmentation in online retail.
-
-## Datasets Used
-
-| Title | URL | From |
-|---|---|---|
-| online_retail.csv | https://archive.ics.uci.edu/dataset/352/online%2Bretail | UC Irvine Machine Learning Repository |
 
 ## Research Question(s)
 
 **Which customer segments generate the most value, and how should the company prioritize its customer relationships?**
 
 What causes cancellations?
+
+## Datasets Used
+
+| Title | URL | From |
+|---|---|---|
+| online_retail.csv | https://archive.ics.uci.edu/dataset/352/online%2Bretail | UC Irvine Machine Learning Repository |
 
 ## Process (rough outline)
 
@@ -27,5 +27,14 @@ What causes cancellations?
 9. Produce the numbers that support your final recommendation
 
 ## Tools Used
+DuckDB
 SQL
+
+## Key Findings
+None yet!
+
+## Recommendations
+None yet!
+
+## How to set up
 
