@@ -27,8 +27,8 @@ What causes cancellations?
 9. Produce the numbers that support your final recommendation
 
 ## Tools Used
-DuckDB
-SQL
+- DuckDB
+- SQL
 
 ## Key Findings
 None yet!

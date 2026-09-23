@@ -2,7 +2,7 @@
 -- 1. LOAD DATA
 -- --------------------------------------------------------------------------------------------------------
 -- convert InvoiceDate from error-causing TIMESTAMP to VARCHAR with proper timestamp format
-CREATE OR REPLACE VIEW retail AS
+CREATE OR REPLACE VIEW original_data AS
 SELECT
     InvoiceNo,
     StockCode,
@@ -18,7 +18,18 @@ FROM read_csv(
 );
 
 -- --------------------------------------------------------------------------------------------------------
--- 2. NULL DATA EXPLORATION
+-- 2. DATA UNDERSTANDING
+-- --------------------------------------------------------------------------------------------------------
+-- check data types
+DESCRIBE original_data;
+
+-- look at first ten rows
+SELECT *
+FROM original_data
+LIMIT 10;
+
+-- --------------------------------------------------------------------------------------------------------
+-- 3. INVESTIGATE NULL VALUES
 -- --------------------------------------------------------------------------------------------------------
 SELECT
     COUNT(*) AS total_rows,
@@ -30,13 +41,18 @@ SELECT
     total_rows - COUNT(UnitPrice) AS UnitPrice_present,
     total_rows - COUNT(CustomerID) AS CustomerID_present, -- 135080 nulls
     total_rows - COUNT(Country) AS Country_present
-FROM retail;
+FROM original_data;
+
+-- investigate rows with null values for both Description and CustomerID
+SELECT *
+FROM original_data
+WHERE Description IS NULL AND CustomerID IS NULL;
 
 -- --------------------------------------------------------------------------------------------------------
 -- 3. DATA CLEANING
 -- --------------------------------------------------------------------------------------------------------
--- create new table for customer-level analysis, excluding rows where CustomerID is null
-CREATE OR REPLACE VIEW nonNullCustomerIDs AS
+-- create new table for customer-level analysis, excluding rows where CustomerID is null, automatically excluding bad debt adjustment rows
+CREATE OR REPLACE VIEW customer_retail AS
 SELECT
     InvoiceNo,
     StockCode,
@@ -46,26 +62,20 @@ SELECT
     UnitPrice,
     CustomerID,
     Country
-FROM retail
+FROM original_data
 WHERE CustomerID IS NOT NULL;
-
--- create new table for customer-level financial analysis, making all  rows where CustomerID is null
-CREATE OR REPLACE VIEW nonNullCustomerIDs AS
-SELECT
-    InvoiceNo,
-    StockCode,
-    Description,
-    Quantity,
-    InvoiceDate,
-    UnitPrice,
-    CustomerID,
-    Country
-FROM retail
-WHERE CustomerID IS NOT NULL;
-
 
 -- --------------------------------------------------------------------------------------------------------
 -- 4. DATA EXPLORATION
+-- --------------------------------------------------------------------------------------------------------
+-- investigate StockCode deviations
+SELECT StockCode
+FROM customer_retail
+WHERE StockCode NOT LIKE '_____' AND StockCode NOT LIKE '______' AND StockCode NOT LIKE '_______'
+GROUP BY StockCode;
+
+-- --------------------------------------------------------------------------------------------------------
+-- 5. MEASURE CUSTOMER REVENUE
 -- --------------------------------------------------------------------------------------------------------
 -- identify specific customer transaction counts, total quantity bought, and total amount spent
 SELECT 
@@ -73,7 +83,7 @@ SELECT
     COUNT(*) AS TransactionCount,
     SUM(Quantity) AS TotalQuantity,
     SUM(Quantity*UnitPrice) AS TotalSpent
-FROM retail
+FROM nonNullCustomerIDs
 GROUP BY CustomerID
 ORDER BY TotalSpent DESC;
 -- null CustomerIDs had 135080 transactions, 269562 items bought, and a total of 1447682.1200000737 spent
