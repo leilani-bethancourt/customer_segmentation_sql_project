@@ -17,7 +17,7 @@ What causes cancellations?
 ## Process (rough outline)
 
 1. Understand the data
-2. Clean/validate the data
+2. Clean/validate the data for specific uses
 3. Measure customer revenue
 4. Measure purchase frequency
 5. Identify high-value customers
