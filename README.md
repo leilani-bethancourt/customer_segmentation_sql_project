@@ -1,8 +1,8 @@
-# Analyzing Customer Segmentation in Online Retailing
+# RFM Customer Segmentation Analysis in Online Retailing
 
-I look at customer segments that companies should prioritize, why customers cancel, and what locations yield highest value.
+ **RFM** stands for recency, frequency, and monetary value. Customers are ranked on a scale of 1-5 for each category, with 5-5-5 ranking customers being the best.
 
-> Research Question: Which customer segments generate the most value?
+> Research Question: Which customer segments should companies prioritize?
 
 ### Key Findings
 None yet!
@@ -16,7 +16,8 @@ None yet!
 ### Process
 
 1. Understand the data
-2. Clean/validate the data for specific uses
+2. Clean/validate the data for customer analysis
+    - asdf
 3. Measure customer revenue
 4. Measure purchase frequency
 5. Identify high-value customers
