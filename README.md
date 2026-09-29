@@ -1,20 +1,19 @@
-# Project Overview
+# Analyzing Customer Segmentation in Online Retailing
 
-A project to learn how to use SQL with datasets pertaining to customer segmentation in online retail.
+I look at customer segments that companies should prioritize, why customers cancel, and what locations yield highest value.
 
-## Research Question(s)
+> Research Question: Which customer segments generate the most value?
 
-**Which customer segments generate the most value, and how should the company prioritize its customer relationships?**
+### Key Findings
+None yet!
 
-What causes cancellations?
-
-## Datasets Used
+### Dataset Used
 
 | Title | URL | From |
 |---|---|---|
 | online_retail.csv | https://archive.ics.uci.edu/dataset/352/online%2Bretail | UC Irvine Machine Learning Repository |
 
-## Process (rough outline)
+### Process
 
 1. Understand the data
 2. Clean/validate the data for specific uses
@@ -26,15 +25,12 @@ What causes cancellations?
 8. Test whether the patterns hold
 9. Produce the numbers that support your final recommendation
 
-## Tools Used
+### Tools Used
 - DuckDB
 - SQL
 
-## Key Findings
+### Recommendations
 None yet!
 
-## Recommendations
-None yet!
-
-## How to set up
+### How to set up
 

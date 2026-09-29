@@ -1,5 +1,5 @@
 -- --------------------------------------------------------------------------------------------------------
--- 1. LOAD DATA
+-- 1. DATA UNDERSTANDING
 -- --------------------------------------------------------------------------------------------------------
 -- convert InvoiceDate from error-causing TIMESTAMP to VARCHAR with proper timestamp format
 CREATE OR REPLACE VIEW original_data AS
@@ -17,9 +17,6 @@ FROM read_csv(
     types = {'InvoiceDate': 'VARCHAR'}
 );
 
--- --------------------------------------------------------------------------------------------------------
--- 2. DATA UNDERSTANDING
--- --------------------------------------------------------------------------------------------------------
 -- check data types
 DESCRIBE original_data;
 
@@ -96,7 +93,7 @@ FROM original_data
 GROUP BY Country;
 
 -- --------------------------------------------------------------------------------------------------------
--- 3. DATA CLEANING
+-- 2. DATA CLEANING
 -- --------------------------------------------------------------------------------------------------------
 -- create new table for customer-level analysis, excluding rows where CustomerID is null
 CREATE OR REPLACE VIEW customer_retail AS
@@ -111,10 +108,6 @@ SELECT
     Country
 FROM original_data
 WHERE CustomerID IS NOT NULL;
-
--- --------------------------------------------------------------------------------------------------------
--- 4. DATA EXPLORATION
--- --------------------------------------------------------------------------------------------------------
 
 -- --------------------------------------------------------------------------------------------------------
 -- 5. MEASURE CUSTOMER REVENUE
