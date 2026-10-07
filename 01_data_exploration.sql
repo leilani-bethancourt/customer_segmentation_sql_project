@@ -5,7 +5,7 @@
 -- =========================================================================================================================================
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------
--- 1. DATA VALIDATTION
+-- 1. DATA VALIDATION AND EXPLORATION
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 
 -- Load InvoiceDate as VARCHAR to prevent automatic date parsing errors caused by inconsistent source formatting.
@@ -25,14 +25,14 @@ DESCRIBE raw_data;
 -- Check the total number of nulls for each column.
 SELECT
     COUNT(*) AS total_rows,
-    total_rows - COUNT(InvoiceNo) AS InvoiceNo_present,
-    total_rows - COUNT(StockCode) AS StockCode_present,
-    total_rows - COUNT(Description) AS Description_present,
-    total_rows - COUNT(Quantity) AS Quantity_present,
-    total_rows - COUNT(InvoiceDate) AS InvoiceDate_present,
-    total_rows - COUNT(UnitPrice) AS UnitPrice_present,
-    total_rows - COUNT(CustomerID) AS CustomerID_present,
-    total_rows - COUNT(Country) AS Country_present
+    total_rows - COUNT(InvoiceNo) AS InvoiceNo_null,
+    total_rows - COUNT(StockCode) AS StockCode_null,
+    total_rows - COUNT(Description) AS Description_null,
+    total_rows - COUNT(Quantity) AS Quantity_null,
+    total_rows - COUNT(InvoiceDate) AS InvoiceDate_null,
+    total_rows - COUNT(UnitPrice) AS UnitPrice_null,
+    total_rows - COUNT(CustomerID) AS CustomerID_null,
+    total_rows - COUNT(Country) AS Country_null
 FROM raw_data;
 
 -- Sum total number of excess exact row duplicates.
@@ -68,7 +68,7 @@ WHERE REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$');
 
 -- Investigate all StockCode format deviations from 5 digits with 0-2 trailing letters.
 SELECT StockCode,
-    COUNT(StockCode) AS StockCode_no,
+    COUNT(*) AS num_StockCode,
     LIST(DISTINCT InvoiceNo) AS InvoiceNos,
     LIST(DISTINCT Description) AS Descriptions,
     LIST(DISTINCT Quantity) AS Quantities,
@@ -77,7 +77,7 @@ SELECT StockCode,
 FROM raw_data
 WHERE NOT REGEXP_MATCHES(StockCode, '^[0-9]{5}[a-zA-Z]{0,2}$')
 GROUP BY StockCode
-ORDER BY StockCode_no DESC;
+ORDER BY num_StockCode DESC;
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 -- Quantity INVESTIGATION ------------------------------------------------------------------------------------------------------------------
@@ -88,14 +88,19 @@ SELECT COUNT(*) AS num_negative_quantities
 FROM raw_data
 WHERE Quantity < 0;
 
--- Confirm Quantity values for cancellations are negative.
+-- Count rows with 0 Quantity values.
+SELECT COUNT(*) AS num_zero_quantities
+FROM raw_data
+WHERE Quantity = 0;
+
+-- Check for cancellations with positive Quantity values.
 SELECT DISTINCT Quantity
 FROM raw_data
 WHERE REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$')
     AND Quantity > 0;
 
 -- Count rows with negative Quantity values associated with customer purchases.
-SELECT COUNT(*) AS num_negative_quantities,
+SELECT COUNT(*) AS num_negative_quantities
 FROM raw_data
 WHERE NOT REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$')
     AND (StockCode NOT IN ('POST', 'DOT', 'C2', 'D', 'S', 'BANK CHARGES', 'AMAZONFEE', 'CRUK', 'B'))
@@ -125,45 +130,45 @@ SELECT MAX(CAST(SPLIT_PART(InvoiceDate, '/', 1) AS INTEGER)) AS first_part_max,
     MAX(CAST(SPLIT_PART(InvoiceDate, '/', 2) AS INTEGER)) AS second_part_max
 FROM raw_data;
 
--- Investigate InvoiceDate format deviations from mm/dd/yy MM:SS.
+-- Investigate InvoiceDate format deviations from M/D/YY H:MM.
 SELECT InvoiceDate
 FROM raw_data
 WHERE NOT REGEXP_MATCHES(InvoiceDate, '^\d{1,2}/\d{1,2}/\d{2} \d{1,2}:\d{2}$');
 
 -- Investigate InvoiceDate range of dates.
-WITH dates AS (
-    SELECT InvoiceDate
-    FROM raw_data
-    WHERE 
-)
-SELECT InvoiceDate
-FROM dates
-ORDER BY InvoiceDate;
+SELECT MIN(STRPTIME(InvoiceDate, '%m/%d/%y %H:%M')) AS start_date,
+    MAX(STRPTIME(InvoiceDate, '%m/%d/%y %H:%M')) AS end_date
+FROM raw_data;
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 -- UnitPrice INVESTIGATION -----------------------------------------------------------------------------------------------------------------
 -- -----------------------------------------------------------------------------------------------------------------------------------------
--- Investigate negative UnitPrice values.
-SELECT *
-FROM original_data
-WHERE UnitPrice < 0;
+-- Investigate negative or 0 UnitPrice values.
+SELECT Description,
+    COUNT(*) AS num_descriptions
+FROM raw_data
+WHERE UnitPrice <= 0
+GROUP BY Description
+ORDER BY num_descriptions DESC;
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 -- CustomerID INVESTIGATION ----------------------------------------------------------------------------------------------------------------
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 -- Investigate CustomerID format deviations from 5 digits.
 SELECT *
-FROM original_data
-WHERE NOT REGEXP_MATCHES(CustomerID, '^[0-9]{5}$');
+FROM raw_data
+WHERE CustomerID < 10000 OR CustomerID > 99999;
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 -- Country INVESTIGATION -------------------------------------------------------------------------------------------------------------------
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 
--- Investigate Country values.
-SELECT Country
-FROM original_data
-GROUP BY Country;
+-- Investigate Country values and occurrence rates.
+SELECT Country,
+    COUNT(*) AS occurrence_count
+FROM raw_data
+GROUP BY Country
+ORDER BY occurrence_count DESC;
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------
 -- 2. DATA CLEANING
@@ -183,7 +188,7 @@ WHERE CustomerID IS NOT NULL
 
 -- Exclude `StockCode` values that do not pertain to customer purchases.
 
--- Convert InvoiceDate from VARCHAR to TIMESTAMP using MM/DD/YY HH:MM format.
+-- Convert InvoiceDate from VARCHAR to TIMESTAMP using MM/DD/YY HH:MM format. add weekday?
 CREATE OR REPLACE VIEW cleaning_data AS
 SELECT * EXCLUDE InvoiceDate,
     STRPTIME(InvoiceDate, '%m/%d/%y %H:%M:%S') AS InvoiceDate
