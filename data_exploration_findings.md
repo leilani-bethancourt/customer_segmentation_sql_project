@@ -14,19 +14,20 @@
 
 **Purpose:** Exclude transactions that cannot be traced back to a customer purchase.
 
-## Duplicate Values
-
-**Issue:** 5,268 excess exact row duplicates were found. 
-
-**Action:** Exclude excess exact row duplicates from the analytical dataset, but leave records in the raw dataset for traceability.
-
-**Purpose:** Exclude duplicates to avoid inflation of metrics.
+## Duplicate Rows
+- There are 5,268 EXCESS duplicate rows.
+    - Removing these rows would result in a net monetary difference of approximately £21,740.98, or an absolute monetary difference of approximately £27,406.50.
+- There are 4,879 unique rows that have duplicates.
 
 ## Variable Investigation
 
 ### InvoiceNo
 
-- 9,288 rows are cancellations and have negative quantity.
+- 9,288 rows are indicated as cancellations and all have negative quantities.
+    - Some rows indicated as cancellations are not actually cancellations, but things like samples (as indicated by StockCode).
+- There are 3,836 unique cancellation invoices.
+    - There are 477 unique cancellation invoices that have `StockCode` deviation codes.
+- There are 25,900 unique invoices.
 
 **Issue:** Three records have `InvoiceNo` values beginning with `A` and contain the description `Adjust bad debt`. All three records adjust the same amount (£11,062.06).
 
@@ -35,8 +36,10 @@
 **Purpose:** Exclude transactions that do not represent customer purchases.
 
 ### StockCode
+- There are 2,995 rows that deviate from the standard format, with 33 distinct deviation codes.
+- There are 477 unique cancellation invoices that have `StockCode` deviation codes.
 
-**Issue:** 2,995 records deviate from the `StockCode` format, with 33 distinct codes. Code deviations are listed below, under "Common StockCode Format Deviations".
+**Issue:** 2,995 rows deviate from the `StockCode` format, with 33 distinct codes. Code deviations are listed below, under "Common StockCode Format Deviations".
 
 **Action:** Exclude records unrelated to customer purchases from the analytical dataset, but leave records in the raw dataset for traceability.
 
@@ -45,33 +48,34 @@
 **Common StockCode Format Deviations**
 
 | Code | Occurrences | Description(s) | Interpreted Meaning |
-|---|---|---|---|
-| `POST` | 1256 | POSTAGE | Delivery charge |
-| `DOT` | 710 | DOTCOM POSTAGE | Delivery charge |
-| `M` or `m` | 572 | Manual | Manual invoice entry |
-| `C2` | 144 | CARRIAGE | Delivery charge |
-| `D` | 77 | Discount | Discount |
-| `S` | 63 | SAMPLES | Sample product |
-| `BANK CHARGES` | 37 | Bank Charges | Bank charge |
-| `AMAZONFEE` | 34 | AMAZON FEE | Delivery charge |
-| `CRUK` | 16 | CRUK Commission | Cancer Research UK commission charge |
-| `DCGS...` or `gift_0001_...`| 79 | varies | Dotcomgiftshop products |
-| `PADS` | 3 | PADS TO MATCH ALL CUSHIONS" | Product description |
-| `B` | 3 | Adjust bad debt | Adjustment |
+|---|---|---|---|---|
+| `POST` | 1256 | POSTAGE | `Delivery Charge` |
+| `DOT` | 710 | DOTCOM POSTAGE | `Delivery Charge` |
+| `M` or `m` | 572 | Manual | `Manual Entry` |
+| `C2` | 144 | CARRIAGE | `Delivery Charge` |
+| `D` | 77 | Discount | `Discount` |
+| `S` | 63 | SAMPLES | `Sample product` |
+| `BANK CHARGES` | 37 | Bank Charges | `Bank Charge` |
+| `AMAZONFEE` | 34 | AMAZON FEE | `Delivery Charge` |
+| `CRUK` | 16 | CRUK Commission | `Cancer Research UK Commission` |
+| `DCGS...` or `gift_0001_...`| 79 | varies | `Product Description` |
+| `PADS` | 3 | PADS TO MATCH ALL CUSHIONS" | `Product Description` |
+| `B` | 3 | Adjust bad debt | `Debt Adjustment` |
 
+### Description
+
+- There are 1,454 missing `Description` values. All of these records also have missing `CustomerID` values.
 
 ### Quantity
 
 - 10,624 rows have negative values. 
-- All rows with InvoiceNo indicating cancellations also have negative quantities.
-- 1,336 negative-quantity rows remain after excluding standard cancellations and selected non-product StockCodes. Further investigation identified missing descriptions, damaged or discarded products, inventory adjustments, and unexplained records.    
-    - 862 rows have null Description values
-    - Other rows indicate damaged/lost/discarded products, adjustments, entry/sales mistakes, and unexplained records.
+    - All rows with InvoiceNo indicating cancellations have negative quantities.
 
 ### InvoiceDate
 
-- Invoice dates are in mm/dd/yy HH:MM format.
+- Invoice dates are in M/D/YY H:MM format.
 - Invoice dates range from December 1, 2010 at 08:26 to December 9, 2011 at 12:50.
+- There are no deviations from the standard format.
 
 **Issue:** Automatic timestamp parsing failed due to ambiguity in the source date format.
 
@@ -86,7 +90,8 @@
 
 ### CustomerID
 
-- All `CustomerID` values are five digits.
+- There are 135,080 rows with missing `CustomerID`.
+- There are no deviations from the standard format.
 
 ### Country
 

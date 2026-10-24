@@ -11,12 +11,12 @@
 -- Load InvoiceDate as VARCHAR to prevent automatic date parsing errors caused by inconsistent source formatting.
 CREATE OR REPLACE VIEW raw_data AS
 SELECT * 
-FROM read_csv('./data/online_retail.csv', types={'InvoiceDate': 'VARCHAR'});
+FROM read_csv('data/online_retail.csv', types={'InvoiceDate': 'VARCHAR'});
 
 -- Inspect the first ten rows of raw data.
 SELECT * FROM raw_data LIMIT 10;
 
--- Check the total number of records imported.
+-- Check the total number of rows imported.
 SELECT COUNT(*) AS row_count FROM raw_data;  
 
 -- Verify the imported column data types.
@@ -40,24 +40,30 @@ SELECT
 FROM raw_data;
 
 -- ---------------------------------------------------------------------------------------------------------------
--- 3. Duplicate Records
+-- 3. Duplicate Rows
 -- ---------------------------------------------------------------------------------------------------------------
-
--- Sum total number of excess exact row duplicates.
+-- Sum total number of excess exact row duplicates and find monetary impact of removing them.
 WITH duplicates AS (
     SELECT *,
-        COUNT(*) - 1 AS excess_duplicates
+        COUNT(*) - 1 AS num_excess_duplicates
     FROM raw_data
     GROUP BY ALL
     HAVING COUNT(*) > 1
-)
-SELECT SUM(excess_duplicates) AS total_excess_duplicates
+    )
+SELECT SUM(num_excess_duplicates) AS total_excess_duplicates,
+    SUM(Quantity * UnitPrice * num_excess_duplicates) AS net_monetary_impact,
+    SUM(ABS(Quantity) * UnitPrice * num_excess_duplicates) AS absolute_monetary_impact
 FROM duplicates;
+
+-- Investigate exact row duplicates.
+SELECT *
+FROM raw_data
+GROUP BY ALL
+HAVING COUNT(*) > 1;
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 4. InvoiceNo Validation
 -- ---------------------------------------------------------------------------------------------------------------
-
 -- Investigate InvoiceNo format deviations from 6 digits or 6 digits with a leading 'C'.
 SELECT *
 FROM raw_data
@@ -65,10 +71,39 @@ WHERE NOT (
     REGEXP_MATCHES(InvoiceNo, '^[0-9]{6}$')
     OR REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$'));
 
+-- Investigate rows with matching InvoiceNo.
+SELECT InvoiceNo,
+    LIST(StockCode) AS stock_code_list 
+FROM raw_data
+GROUP BY InvoiceNo;
+
 -- Count rows that are cancellations.
 SELECT COUNT(*) AS num_cancellations
 FROM raw_data
 WHERE REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$');
+
+-- Investigate invoices indicating cancellations.
+SELECT InvoiceNo,
+    LIST(DISTINCT StockCode) AS StockCodes,
+    LIST(DISTINCT Description) AS Descriptions,
+    LIST(DISTINCT Quantity) AS Quantities,
+    LIST(DISTINCT UnitPrice) AS UnitPrices,
+    LIST(DISTINCT CustomerID) AS CustomerIDs
+FROM raw_data
+WHERE InvoiceNo LIKE 'C______'
+GROUP BY InvoiceNo;
+ 
+-- Investigate invoices indicating cancellations with StockCode deviations.
+SELECT InvoiceNo,
+    LIST(DISTINCT StockCode) AS StockCodes,
+    LIST(DISTINCT Description) AS Descriptions,
+    LIST(DISTINCT Quantity) AS Quantities,
+    LIST(DISTINCT UnitPrice) AS UnitPrices,
+    LIST(DISTINCT CustomerID) AS CustomerIDs
+FROM raw_data
+WHERE InvoiceNo LIKE 'C______'
+    AND NOT REGEXP_MATCHES(StockCode, '^[0-9]{5}[A-Z]{0,2}$')
+GROUP BY InvoiceNo;
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 5. StockCode Validation
@@ -86,6 +121,11 @@ FROM raw_data
 WHERE NOT REGEXP_MATCHES(StockCode, '^[0-9]{5}[a-zA-Z]{0,2}$')
 GROUP BY StockCode
 ORDER BY num_StockCode DESC;
+
+-- Investigate rows with sample products.
+SELECT *
+FROM raw_data
+WHERE StockCode = 'S';
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 6. Quantity Validation
@@ -106,28 +146,6 @@ SELECT DISTINCT Quantity
 FROM raw_data
 WHERE REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$')
     AND Quantity > 0;
-
--- Count rows with negative Quantity values associated with customer purchases.
-SELECT COUNT(*) AS num_negative_quantities
-FROM raw_data
-WHERE NOT REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$')
-    AND (StockCode NOT IN ('POST', 'DOT', 'C2', 'D', 'S', 'BANK CHARGES', 'AMAZONFEE', 'CRUK', 'B'))
-    AND Quantity < 0;
-
--- Investigate negative Quantity values associated with customer purchases.
-SELECT COUNT(*) AS num_invoices_per_description,
-    LIST(DISTINCT InvoiceNo) AS InvoiceNos,
-    Description,
-    LIST(DISTINCT Quantity) AS Quantities,
-    LIST(DISTINCT UnitPrice) AS UnitPrices,
-    LIST(DISTINCT StockCode) AS StockCodes,
-    LIST(DISTINCT CustomerID) AS CustomerIDs
-FROM raw_data
-WHERE NOT REGEXP_MATCHES(InvoiceNo, '^C[0-9]{6}$')
-    AND (StockCode NOT IN ('POST', 'DOT', 'C2', 'D', 'S', 'BANK CHARGES', 'AMAZONFEE', 'CRUK', 'B'))
-    AND Quantity < 0
-GROUP BY Description
-ORDER BY num_invoices_per_description DESC;
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 7. InvoiceDate Validation

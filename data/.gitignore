@@ -18,3 +18,6 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Personal
+things_I_learned.md
