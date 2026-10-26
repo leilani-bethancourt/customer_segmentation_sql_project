@@ -1,6 +1,6 @@
 # Data Exploration Findings
 
->*Document data-quality findings from 01_data_exploration.sql, cleaning decisions implemented in 02_data_cleaning.sql, and their justifications.*
+>*Document all data findings from 01_data_exploration.sql.*
 
 ## Schema
 
@@ -8,13 +8,10 @@
 
 ## Null Values
 
-**Issue:** `Description` has 1,454 missing values and `CustomerID` has 135,080 missing values. (All null `Description` values are also rows with null `CustomerID` values.)
+- There are 1,454 missing values for `Description`.
+- There are 135,080 missing values for `CustomerID` (which include missing values for `Description`).
 
-**Action:** Exclude rows with missing `CustomerID` values from the analytical dataset, but leave records in the raw dataset for traceability. 
-
-**Purpose:** Exclude transactions that cannot be traced back to a customer purchase.
-
-## Duplicate Rows
+## Duplicates
 - There are 5,268 EXCESS duplicate rows.
     - Removing these rows would result in a net monetary difference of approximately £21,740.98, or an absolute monetary difference of approximately £27,406.50.
 - There are 4,879 unique rows that have duplicates.
@@ -28,27 +25,16 @@
 - There are 3,836 unique cancellation invoices.
     - There are 477 unique cancellation invoices that have `StockCode` deviation codes.
 - There are 25,900 unique invoices.
-
-**Issue:** Three records have `InvoiceNo` values beginning with `A` and contain the description `Adjust bad debt`. All three records adjust the same amount (£11,062.06).
-
-**Action:** Exclude these records from the analytical dataset, but leave records in the raw dataset for traceability.
-
-**Purpose:** Exclude transactions that do not represent customer purchases.
+- 3 rows have `InvoiceNo` values beginning with `A` and contain the description `Adjust bad debt`. All three records adjust the same amount (£11,062.06).
 
 ### StockCode
 - There are 2,995 rows that deviate from the standard format, with 33 distinct deviation codes.
 - There are 477 unique cancellation invoices that have `StockCode` deviation codes.
 
-**Issue:** 2,995 rows deviate from the `StockCode` format, with 33 distinct codes. Code deviations are listed below, under "Common StockCode Format Deviations".
-
-**Action:** Exclude records unrelated to customer purchases from the analytical dataset, but leave records in the raw dataset for traceability.
-
-**Purpose:** Exclude transactions that do not represent customer purchases.
-
 **Common StockCode Format Deviations**
 
 | Code | Occurrences | Description(s) | Interpreted Meaning |
-|---|---|---|---|---|
+|---|---|---|---|
 | `POST` | 1256 | POSTAGE | `Delivery Charge` |
 | `DOT` | 710 | DOTCOM POSTAGE | `Delivery Charge` |
 | `M` or `m` | 572 | Manual | `Manual Entry` |
@@ -76,12 +62,6 @@
 - Invoice dates are in M/D/YY H:MM format.
 - Invoice dates range from December 1, 2010 at 08:26 to December 9, 2011 at 12:50.
 - There are no deviations from the standard format.
-
-**Issue:** Automatic timestamp parsing failed due to ambiguity in the source date format.
-
-**Action:** Initially converted `InvoiceDate` to VARCHAR, then to TIMESTAMP. 
-
-**Purpose:** Standardize and remove ambiguity around TIMESTAMP format.
 
 ### UnitPrice
 

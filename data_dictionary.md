@@ -34,3 +34,20 @@
 *The cleaned data dictionary reflects the final structure and characteristics of the dataset after data cleaning. It documents changes made to the validated source data, including data type conversions, excluded records, standardized values, and any new or modified columns used for analysis.*
 
 To be completed after implementing and validating the data-cleaning transformations in 02_data_cleaning.sql.
+
+###  Defined Rules for Transactions
+
+**Cancellation:** A transaction where:
+- `InvoiceNo` begins with `C`.
+- `StockCode` represents a valid product or charge.
+- `Quantity` is negative.
+
+**Purchase:** A transaction where:
+- `InvoiceNo` does not begin with `C`.
+- `StockCode` represents a valid product or charge.
+- `Quantity` is positive.
+
+**Purchase:** A transaction where:
+- `InvoiceNo` does not begin with `C`.
+- `StockCode` represents a valid product or charge.
+- `Quantity` is positive.
