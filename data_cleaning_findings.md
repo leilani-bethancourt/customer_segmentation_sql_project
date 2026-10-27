@@ -16,12 +16,23 @@
 
 **Reason:** Exclude transactions that do not represent customer purchases.
 
+**Impact:** 3 rows were removed.
+
 ## StockCode
 **Action:** Exclude rows indicating research comission or free sample products for customers.
 
 **Reason:** Exclude transactions that do not represent customer purchases.
 
+**Impact:** 77 rows were removed.
+
 ## Missing Values
 **Action:** Remove all missing `CustomerID` values, which also removes all `Description` values.
 
 **Reason:** Exclude invoices that cannot be traced back to a customer purchase.
+
+**Impact:** 135,016 rows were removed.
+135096
+
+## Final Data Validation
+
+- There are 406,813 rows remaining, a difference of 135,096 rows.
