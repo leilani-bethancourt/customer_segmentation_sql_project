@@ -33,6 +33,8 @@
 **Impact:** 135,016 rows were removed.
 135096
 
-## Final Data Validation
+## Initial Data Validation
 
 - There are 406,813 rows remaining, a difference of 135,096 rows.
+- All rows with negative quantities have `InvoiceNo` that denote cancellations.
+    - 

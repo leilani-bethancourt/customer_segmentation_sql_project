@@ -70,6 +70,24 @@ DESCRIBE initial_cleaned_dataset;
 -- ---------------------------------------------------------------------------------------------------------------
 -- 4. Investigate Negative Quantities
 -- ---------------------------------------------------------------------------------------------------------------
+-- Investigate rows with negative Quantity and InvoiceNo does not denote cancellations.
+SELECT *
+FROM initial_cleaned_dataset
+WHERE Quantity < 0
+    AND InvoiceNo NOT LIKE 'C______';
+
+-- Investigate rows with nonnegative Quantity and InvoiceNo denotes cancellations.
+SELECT *
+FROM initial_cleaned_dataset
+WHERE NOT Quantity < 0
+    AND InvoiceNo LIKE 'C______';
+
+-- Investigate rows with StockCode deviations and InvoiceNo denotes cancellations.
+SELECT *
+FROM initial_cleaned_dataset
+WHERE NOT REGEXP_MATCHES(StockCode, '^[0-9]{5}[A-Z]{0,2}$')
+    AND InvoiceNo LIKE 'C______'; 
+-- group by
 
 -- ---------------------------------------------------------------------------------------------------------------
 -- 5. Investigate Unit Prices of 0
